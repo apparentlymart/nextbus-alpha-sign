@@ -61,6 +61,25 @@ my $configs = {
 
     },
 
+    home => {
+
+        "6|null|4942" => {
+            runs => [qw(06_IB2)],
+            walk_time => 2,
+        },
+
+        "71|null|4942" => {
+            runs => [qw(71_IB3)],
+            walk_time => 2,
+        },
+
+        "F|null|5668" => {
+            runs => [qw(F__IBCTRO F__IBVN F__IBCHUR)],
+            walk_time => 15,
+        },
+
+    },
+
 };
 
 my $config = $configs->{$config_name};
@@ -151,7 +170,7 @@ while (1) {
 
     if ($message_string ne $last_message_string) {
         $sign->set_text_file_text(B => $message_string);
-        #$sign->configure_text_file_run_sequence("A", ($message_string ? ("B") : ()));
+        $sign->configure_text_file_run_sequence("A", ($message_string ? ("B") : ()));
     }
     $last_message_string = $message_string;
 
