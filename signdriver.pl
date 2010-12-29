@@ -189,7 +189,7 @@ while (1) {
 
     if ($message_string ne $last_message_string) {
         $sign->set_text_file_text(B => $message_string);
-        $sign->configure_text_file_run_sequence("A", ($message_string ? ("B") : ()));
+        #$sign->configure_text_file_run_sequence("A", ($message_string ? ("B") : ()));
     }
     $last_message_string = $message_string;
 
