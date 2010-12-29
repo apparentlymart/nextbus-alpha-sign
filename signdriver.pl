@@ -77,6 +77,13 @@ my $configs = {
             walk_time => 12,
         },
 
+        {
+            route_tag => "37",
+            stop_tag => "6231",
+            runs => [qw(37_OB1)],
+            walk_time => 6,
+        },
+
     ],
 
 };
