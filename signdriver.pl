@@ -21,9 +21,6 @@ $sign->configure_files(
         (map { mode('ROLL_UP', 'BOTTOM'), string($_) } qw(c d e)),
         mode('ROLL_UP', 'BOTTOM'),
     ),
-    B => Sign::TextFile->new(
-        " " x 250,
-    ),
     a => Sign::StringFile->new(15),
     b => Sign::StringFile->new(15),
     c => Sign::StringFile->new(15),
@@ -125,8 +122,6 @@ my $url_thing = join("&", map { "stops=".$_  } @stop_codes);
 
 my $url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictionsForMultiStops&a=sf-muni&".$url_thing;
 
-my $last_message_string = "";
-
 while (1) {
 
     my $res = $ua->get($url);
@@ -181,18 +176,6 @@ while (1) {
         my $prediction = $predictions[$idx++];
         $sign->set_string_file_text($string_name => english_prediction($prediction));
     }
-
-    my $message_string = "";
-    if (@messages) {
-        $message_string = mode('ROTATE', 'BOTTOM').join("\cM", @messages);
-    }
-
-    if ($message_string ne $last_message_string) {
-        $sign->set_text_file_text(B => $message_string);
-        #$sign->configure_text_file_run_sequence("A", ($message_string ? ("B") : ()));
-    }
-    $last_message_string = $message_string;
-
 
     sleep 30;
 
