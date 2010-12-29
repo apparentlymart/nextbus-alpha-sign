@@ -61,21 +61,40 @@ my $configs = {
 
     },
 
-    home => {
+    oldhome => {
 
         "6|null|4942" => {
-            runs => [qw(06_IB2)],
+            runs => [qw(06_IB2 06_IB3)],
             walk_time => 2,
         },
 
         "71|null|4942" => {
-            runs => [qw(71_IB3)],
+            runs => [qw(71_IB1)],
             walk_time => 2,
         },
 
         "F|null|5668" => {
             runs => [qw(F__IBCTRO F__IBVN F__IBCHUR)],
             walk_time => 15,
+        },
+
+    },
+
+    home => {
+
+        "6|null|7025" => {
+            runs => [qw(06_IB2 06_IB3)],
+            walk_time => 4,
+        },
+
+        "71|null|4944" => {
+            runs => [qw(71_IB1)],
+            walk_time => 8,
+        },
+
+        "N|null|3911" => {
+            runs => [qw(N__IBNUME N__IBEM6 N__IB3 N__IB1 N__IBJU4)],
+            walk_time => 12,
         },
 
     },
