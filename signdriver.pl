@@ -218,7 +218,7 @@ sub format_predictions {
 
     my $ret = $route_tag . ": ";
 
-    my @predictions = @$predictions;
+    my @predictions = sort { $a <=> $b } @$predictions;
     if (@predictions > 4) {
         @predictions = @predictions[0..3];
     }
