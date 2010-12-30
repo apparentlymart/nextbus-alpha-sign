@@ -142,6 +142,7 @@ my $url_thing = join("&", map { "stops=".$_  } @stop_codes);
 
 my $url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictionsForMultiStops&a=sf-muni&".$url_thing;
 my $weather_url = "http://api.wunderground.com/auto/wui/geo/ForecastXML/index.xml?query=94107";
+my $last_weather_time = 0;
 
 while (1) {
 
@@ -204,7 +205,10 @@ while (1) {
     #    $sign->set_string_file_text($string_name => english_prediction($prediction));
     #}
 
-    {
+    # Only poll the weather forecast every 30 minutes, since it doesn't change
+    # as often as the bus predictions.
+    my $weather_time = time();
+    if (($weather_time - $last_weather_time) > 1800) {
         my $res = $ua->get($weather_url);
 
         unless ($res->is_success) {
@@ -227,6 +231,7 @@ while (1) {
         $sign->set_string_file_text('z' => $weather_string);
 
     }
+    $last_weather_time = $weather_time;
 
     sleep 30;
 
