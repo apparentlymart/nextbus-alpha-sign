@@ -105,6 +105,8 @@ $sign->configure_files(
         string($primary_string_file_name),
         (map { mode('ROLL_UP', 'BOTTOM'), string($_) } @ancillary_string_file_names),
         mode('ROLL_UP', 'BOTTOM'),
+        string('z'),
+        mode('ROLL_UP', 'BOTTOM'),
     ),
     a => Sign::StringFile->new(25),
     b => Sign::StringFile->new(25),
@@ -139,6 +141,7 @@ my @stop_codes = map { $_->{route_tag}."|null|".$_->{stop_tag} } @$config;
 my $url_thing = join("&", map { "stops=".$_  } @stop_codes);
 
 my $url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictionsForMultiStops&a=sf-muni&".$url_thing;
+my $weather_url = "http://api.wunderground.com/auto/wui/geo/ForecastXML/index.xml?query=94107";
 
 while (1) {
 
@@ -200,6 +203,30 @@ while (1) {
     #    my $prediction = $predictions[$idx++];
     #    $sign->set_string_file_text($string_name => english_prediction($prediction));
     #}
+
+    {
+        my $res = $ua->get($weather_url);
+
+        unless ($res->is_success) {
+            warn "Failed to fetch weather forecast: ".$res->status_line."\n";
+            next;
+        }
+
+        my $xml = $res->content;
+
+        my $xp = XML::XPath->new(xml => $xml);
+
+        my ($forecast_elem) = $xp->findnodes("/forecast/simpleforecast/forecastday");
+
+        my $conditions = $xp->findvalue('conditions', $forecast_elem);
+        my $low_temp = $xp->findvalue('low/fahrenheit', $forecast_elem);
+        my $high_temp = $xp->findvalue('high/fahrenheit', $forecast_elem);
+
+        my $weather_string = "$conditions $low_temp-$high_temp";
+
+        $sign->set_string_file_text('z' => $weather_string);
+
+    }
 
     sleep 30;
 
