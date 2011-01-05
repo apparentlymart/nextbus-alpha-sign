@@ -22,6 +22,12 @@ sub new {
     return $self;
 }
 
+sub on_write_failure {
+    my ($self, $code) = @_;
+
+    $self->{on_write_failure} = $code;
+}
+
 sub _send_packet {
     my ($sign, $body) = @_;
 
@@ -34,7 +40,13 @@ sub _send_packet {
 
     my $packet = join('', SYNC, SOH, ALL_SIGNS, $payload, sprintf("%04X", $checksum), EOT);
 
-    syswrite($sign->{fh}, $packet) or warn "Failed to write to sign: $!";
+    my $success = syswrite($sign->{fh}, $packet);
+    unless ($success) {
+        warn "Failed to write to sign: $!";
+        if (my $code = $sign->{on_write_failure}) {
+            $code->();
+        }
+    }
 
 }
 

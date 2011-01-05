@@ -9,6 +9,7 @@ use Sign;
 use Sign::TextFile;
 use Sign::StringFile;
 use Sign::MessageUtil qw(mode string);
+use Device::SerialPort;
 
 my $config_name = shift or die "Usage: signdriver.pl <configname>\n";
 
@@ -95,9 +96,8 @@ my @remaining_string_file_names = 'a' .. 'z';
 my $primary_string_file_name = shift @remaining_string_file_names;
 my @ancillary_string_file_names = map { shift @remaining_string_file_names } 1 .. scalar(@$config);
 
-my $serial_device = "/dev/ttyUSB0";
-sysopen(my $fh, $serial_device, O_RDWR) || die "Can't open serial port: $!";
-my $sign = Sign->new($fh);
+my $sign = find_sign();
+
 $sign->sync_time();
 $sign->configure_files(
     A => Sign::TextFile->new(
@@ -230,8 +230,8 @@ while (1) {
 
         $sign->set_string_file_text('z' => $weather_string);
 
+        $last_weather_time = $weather_time;
     }
-    $last_weather_time = $weather_time;
 
     sleep 30;
 
@@ -264,4 +264,29 @@ sub format_predictions {
         $ret .= "no predictions";
     }
 
+}
+
+sub find_sign {
+    for my $idx (0 .. 9) {
+        my $serial_device = "/dev/ttyUSB".$idx;
+        warn "Trying for $serial_device\n";
+        my $port = Device::SerialPort->new($serial_device);
+        unless ($port) {
+            warn "Failed to create Device::SerialPort instance for $serial_device: $!\n";
+            next;
+        }
+        $port->baudrate(9600) || die "Failed to set the baud rate on $serial_device";
+        my $succeed = sysopen(my $fh, $serial_device, O_RDWR);
+        unless ($succeed) {
+            warn "Failed to open $serial_device for read and write: $!\n";
+            next;
+        }
+        my $new_sign = Sign->new($fh);
+        $new_sign->on_write_failure(sub {
+            # Replace the global sign with a new one
+            $sign = find_sign();
+        });
+        return $new_sign;
+    }
+    die "Failed to find any USB serial ports\n";
 }
