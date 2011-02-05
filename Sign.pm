@@ -129,4 +129,13 @@ sub sync_time {
     $sign->_send_packet(join('', "E ", sprintf("%02i", $hour), sprintf("%02i", $min)));
 }
 
+sub close {
+    my $fh = $_[0]->{fh};
+    close($fh);
+}
+
+sub DESTROY {
+    $_[0]->close();
+}
+
 1;

@@ -267,26 +267,34 @@ sub format_predictions {
 }
 
 sub find_sign {
-    for my $idx (0 .. 9) {
-        my $serial_device = "/dev/ttyUSB".$idx;
-        warn "Trying for $serial_device\n";
-        my $port = Device::SerialPort->new($serial_device);
-        unless ($port) {
-            warn "Failed to create Device::SerialPort instance for $serial_device: $!\n";
-            next;
+    while (1) {
+        my @devices = glob "/dev/ttyUSB*";
+        for my $serial_device (@devices) {
+            #my $serial_device = "/dev/ttyUSB".$idx;
+            next unless -e $serial_device;
+            warn "Trying for $serial_device\n";
+            my $port = Device::SerialPort->new($serial_device);
+            unless ($port) {
+                warn "Failed to create Device::SerialPort instance for $serial_device: $!\n";
+                next;
+            }
+            $port->baudrate(9600) || die "Failed to set the baud rate on $serial_device";
+            $port->close();
+            my $succeed = sysopen(my $fh, $serial_device, O_RDWR);
+            unless ($succeed) {
+                warn "Failed to open $serial_device for read and write: $!\n";
+                next;
+            }
+            my $new_sign = Sign->new($fh);
+            $new_sign->on_write_failure(sub {
+                # Replace the global sign with a new one
+                $sign->close();
+                sleep 5; # Give the USB serial driver some time to bumble about
+                $sign = find_sign();
+                                        });
+            return $new_sign;
         }
-        $port->baudrate(9600) || die "Failed to set the baud rate on $serial_device";
-        my $succeed = sysopen(my $fh, $serial_device, O_RDWR);
-        unless ($succeed) {
-            warn "Failed to open $serial_device for read and write: $!\n";
-            next;
-        }
-        my $new_sign = Sign->new($fh);
-        $new_sign->on_write_failure(sub {
-            # Replace the global sign with a new one
-            $sign = find_sign();
-        });
-        return $new_sign;
+        warn "Failed to find any USB serial ports. Will try again in 10 seconds.\n";
+        sleep 10;
     }
-    die "Failed to find any USB serial ports\n";
 }
